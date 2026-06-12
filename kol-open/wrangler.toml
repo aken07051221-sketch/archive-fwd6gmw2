@@ -2,19 +2,31 @@ name = "kol-open"
 compatibility_date = "2024-09-23"
 pages_build_output_dir = "public"
 
-# ── D1：文字欄位 ───────────────────────────────
-# 建立後請把 `wrangler d1 create kol-open-db` 印出的 database_id 貼到下面。
-[[d1_databases]]
-binding       = "FORM_DB"
-database_name = "kol-open-db"
-database_id   = "貼上你的 database_id"
-
-# ── R2：證件與簽名圖檔 ─────────────────────────
-[[r2_buckets]]
-binding     = "FORM_BUCKET"
-bucket_name = "kol-open-files"
-
-# ── Turnstile（防機器人）─────────────────────
-# 在 Cloudflare 後台 → Turnstile 取得 secret，於 Pages 專案 Settings → 環境變數設定：
-#   TURNSTILE_SECRET = 你的 secret key
-# 前端 public/index.html 內的 data-sitekey 也要換成你的 site key。
+# ─────────────────────────────────────────────────────────────
+# 部署方式：Cloudflare Pages「連結 GitHub」自動部署
+#   在 Pages 專案設定頁面：
+#   Build settings →
+#     Root directory（根目錄）        : kol-open
+#     Build command（建置指令）        : 留空
+#     Build output directory（輸出目錄）: public
+#
+# 綁定（Settings → Functions → Bindings，用下拉選單選，名稱要一模一樣）：
+#   D1 database  變數名 FORM_DB     → 選 kol-open-db
+#   R2 bucket    變數名 FORM_BUCKET → 選 kol-open-files
+#
+# Turnstile（防機器人，選用）環境變數：
+#   TURNSTILE_SECRET = 你的 Turnstile secret key
+# ─────────────────────────────────────────────────────────────
+#
+# 註：此處刻意「不」在檔案內寫死 D1/R2 綁定，改用 Cloudflare 網站的下拉選單設定，
+#     這樣你不需要編輯任何程式碼。若日後想改用指令（wrangler）部署，
+#     再把下面兩段取消註解、填入 database_id 即可：
+#
+# [[d1_databases]]
+# binding       = "FORM_DB"
+# database_name = "kol-open-db"
+# database_id   = "建立 D1 後填入"
+#
+# [[r2_buckets]]
+# binding     = "FORM_BUCKET"
+# bucket_name = "kol-open-files"
