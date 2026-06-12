@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<meta name="referrer" content="no-referrer" />
+<title>KOL OPEN｜合作夥伴中心</title>
+<meta name="description" content="隔壁老王 KOL 合作勞務回傳系統，線上完成資料填寫、證件上傳與電子簽署。" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet" />
+<!-- Turnstile（上線前把下方 data-sitekey 換成你的 site key 即可啟用） -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<style>
+  :root{
+    --yellow:#ffd400; --yellow-deep:#f5b800; --yellow-soft:#fff7d1;
+    --ink:#1d1b16; --ink-soft:#5c574c; --muted:#8a8377;
+    --paper:#ffffff; --cream:#fffdf5; --line:#ece6d4;
+    --ok:#1f9d57; --err:#d7263d; --shadow:0 1px 2px rgba(0,0,0,.04),0 12px 32px -12px rgba(160,130,0,.18);
+    --radius:16px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Noto Sans TC',system-ui,-apple-system,sans-serif;
+    color:var(--ink); background:var(--cream); line-height:1.7;
+    -webkit-font-smoothing:antialiased;
+    background-image:radial-gradient(circle at 100% 0,var(--yellow-soft),transparent 38%),
+                     radial-gradient(circle at 0 100%,#fffbe6,transparent 42%);
+    background-attachment:fixed;
+  }
+  .wrap{max-width:760px;margin:0 auto;padding:0 18px 80px}
+
+  /* ── Header ── */
+  header.hero{padding:46px 18px 30px;text-align:center}
+  .logo{
+    display:inline-flex;align-items:center;gap:12px;font-weight:900;font-size:30px;letter-spacing:.5px;
+  }
+  .logo .mark{
+    display:inline-grid;place-items:center;width:54px;height:54px;border-radius:14px;
+    background:var(--yellow);box-shadow:inset 0 0 0 2px var(--ink);font-size:26px;transform:rotate(-4deg);
+  }
+  .logo .kol{color:var(--ink)} .logo .open{color:var(--ink);position:relative}
+  .logo .open::after{content:"";position:absolute;left:0;right:0;bottom:3px;height:9px;background:var(--yellow);z-index:-1}
+  .hero p.lead{margin-top:14px;color:var(--ink-soft);font-size:16px}
+  .hero .brandline{margin-top:6px;color:var(--muted);font-size:13px;letter-spacing:2px;text-transform:uppercase}
+
+  /* ── Stepper ── */
+  .steps{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:26px 0 8px}
+  .steps .dot{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);font-weight:500}
+  .steps .dot .n{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#fff;border:2px solid var(--line);font-weight:700;font-size:12px}
+  .steps .dot.active{color:var(--ink)} .steps .dot.active .n{background:var(--yellow);border-color:var(--ink)}
+  .steps .sep{width:18px;height:2px;background:var(--line);align-self:center}
+
+  /* ── Card / sections ── */
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:26px 24px;margin-top:22px}
+  .card > h2{font-size:19px;display:flex;align-items:center;gap:10px;margin-bottom:4px}
+  .card > h2 .badge{width:28px;height:28px;border-radius:9px;background:var(--yellow);display:grid;place-items:center;font-weight:900;font-size:14px;box-shadow:inset 0 0 0 2px var(--ink)}
+  .card > .hint{color:var(--muted);font-size:13.5px;margin-bottom:18px}
+
+  /* ── Fields ── */
+  .grid{display:grid;gap:16px;grid-template-columns:1fr 1fr}
+  .field.full{grid-column:1/-1}
+  label.lab{display:block;font-weight:700;font-size:14px;margin-bottom:6px}
+  label.lab .req{color:var(--err);margin-left:3px}
+  label.lab .opt{color:var(--muted);font-weight:400;font-size:12px;margin-left:6px}
+  input[type=text],input[type=tel],input[type=email],input[type=date],textarea,select{
+    width:100%;font:inherit;color:var(--ink);background:var(--cream);
+    border:1.5px solid var(--line);border-radius:11px;padding:12px 14px;transition:.15s;
+  }
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--yellow-deep);background:#fff;box-shadow:0 0 0 4px var(--yellow-soft)}
+  input.invalid,textarea.invalid{border-color:var(--err);background:#fff5f6}
+  textarea{resize:vertical;min-height:84px}
+  .err-msg{color:var(--err);font-size:12.5px;margin-top:5px;display:none}
+  .err-msg.show{display:block}
+
+  /* ── Uploads ── */
+  .uploads{display:grid;gap:14px;grid-template-columns:1fr 1fr}
+  .drop{
+    position:relative;border:2px dashed var(--line);border-radius:14px;background:var(--cream);
+    padding:18px;text-align:center;cursor:pointer;transition:.15s;min-height:170px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;overflow:hidden;
+  }
+  .drop:hover{border-color:var(--yellow-deep);background:#fffdf0}
+  .drop.filled{border-style:solid;border-color:var(--yellow-deep)}
+  .drop .ico{font-size:30px}
+  .drop .t{font-weight:700;font-size:14px}
+  .drop .s{font-size:12px;color:var(--muted)}
+  .drop input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
+  .drop .preview{display:none;width:100%}
+  .drop.filled .preview{display:block}
+  .drop.filled .placeholder{display:none}
+  .drop .preview img{width:100%;max-height:130px;object-fit:contain;border-radius:8px;background:#fff}
+  .drop .preview .meta{font-size:11.5px;color:var(--ok);margin-top:6px;font-weight:600}
+  .drop .preview .meta a{color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-left:8px}
+
+  /* ── Doc / terms ── */
+  .doc{
+    border:1.5px solid var(--line);border-radius:12px;background:var(--cream);
+    max-height:240px;overflow-y:auto;padding:18px 20px;font-size:13.5px;color:var(--ink-soft);
+  }
+  .doc h3{color:var(--ink);font-size:15px;margin-bottom:8px}
+  .doc ol{padding-left:20px;display:grid;gap:7px;margin:10px 0}
+  .doc .sig-fill{color:var(--ink);font-weight:700}
+  .read-flag{font-size:12.5px;color:var(--muted);margin-top:8px;text-align:right}
+  .read-flag.done{color:var(--ok);font-weight:600}
+
+  /* ── Signature pad ── */
+  .sigpad-wrap{margin-top:8px}
+  .sigpad{
+    position:relative;border:1.5px solid var(--line);border-radius:12px;background:#fff;touch-action:none;
+    background-image:linear-gradient(var(--yellow-soft) 1px,transparent 1px);background-size:100% 33px;background-position:0 11px;
+  }
+  .sigpad canvas{display:block;width:100%;height:200px;border-radius:12px}
+  .sigpad .ph{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:14px;pointer-events:none}
+  .sigpad.has-ink .ph{display:none}
+  .sig-tools{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+  .sig-tools .t{font-size:12.5px;color:var(--muted)}
+  .btn-ghost{background:none;border:1.5px solid var(--line);border-radius:9px;padding:7px 14px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;color:var(--ink-soft)}
+  .btn-ghost:hover{border-color:var(--ink);color:var(--ink)}
+
+  /* ── Consent ── */
+  .consent{display:flex;gap:12px;align-items:flex-start;margin-top:18px;padding:16px;background:var(--yellow-soft);border-radius:12px}
+  .consent input{width:20px;height:20px;margin-top:3px;accent-color:var(--ink);flex:none}
+  .consent label{font-size:13.5px;color:var(--ink)}
+  .privacy{font-size:12px;color:var(--muted);margin-top:14px;line-height:1.6}
+  .privacy a{color:var(--ink-soft)}
+
+  /* ── Submit ── */
+  .actions{margin-top:26px}
+  .cf-turnstile{margin:0 0 16px}
+  .btn-submit{
+    width:100%;font:inherit;font-weight:900;font-size:17px;color:var(--ink);
+    background:var(--yellow);border:2px solid var(--ink);border-radius:14px;padding:16px;cursor:pointer;
+    box-shadow:0 4px 0 var(--ink);transition:.12s;
+  }
+  .btn-submit:hover{transform:translateY(-1px);box-shadow:0 5px 0 var(--ink)}
+  .btn-submit:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+  .btn-submit:disabled{opacity:.55;cursor:not-allowed;box-shadow:0 4px 0 #bbb;border-color:#bbb}
+  .form-note{text-align:center;color:var(--muted);font-size:12.5px;margin-top:14px}
+
+  /* ── Toast / overlay ── */
+  .overlay{position:fixed;inset:0;background:rgba(29,27,22,.55);backdrop-filter:blur(3px);display:none;place-items:center;z-index:50;padding:20px}
+  .overlay.show{display:grid}
+  .modal{background:#fff;border-radius:20px;max-width:420px;width:100%;padding:34px 30px;text-align:center;box-shadow:0 30px 80px -20px rgba(0,0,0,.4)}
+  .modal .big{width:74px;height:74px;border-radius:50%;margin:0 auto 16px;display:grid;place-items:center;font-size:38px;background:var(--yellow-soft)}
+  .modal h3{font-size:22px;margin-bottom:8px}
+  .modal p{color:var(--ink-soft);font-size:14.5px}
+  .modal .ref{margin-top:14px;font-size:12.5px;color:var(--muted);font-family:ui-monospace,monospace;background:var(--cream);padding:8px 12px;border-radius:8px;display:inline-block}
+  .modal button{margin-top:22px}
+  .spinner{width:40px;height:40px;border:4px solid var(--yellow-soft);border-top-color:var(--yellow-deep);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  footer{text-align:center;color:var(--muted);font-size:12px;padding:30px 18px 10px}
+  footer .sec{display:inline-flex;align-items:center;gap:6px}
+
+  @media(max-width:560px){
+    .grid,.uploads{grid-template-columns:1fr}
+    .logo{font-size:26px}.card{padding:22px 18px}
+    .steps .dot span.txt{display:none}
+  }
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="logo">
+    <span class="mark">王</span>
+    <span><span class="kol">KOL</span> <span class="open">OPEN</span></span>
+  </div>
+  <p class="lead">隔壁老王 · 合作夥伴中心 — 線上完成資料填寫、證件上傳與電子簽署</p>
+  <div class="brandline">Creator Settlement Portal</div>
+</header>
+
+<div class="wrap">
+  <nav class="steps" aria-hidden="true">
+    <div class="dot active" data-step="1"><span class="n">1</span><span class="txt">基本資料</span></div>
+    <span class="sep"></span>
+    <div class="dot" data-step="2"><span class="n">2</span><span class="txt">匯款帳戶</span></div>
+    <span class="sep"></span>
+    <div class="dot" data-step="3"><span class="n">3</span><span class="txt">證件上傳</span></div>
+    <span class="sep"></span>
+    <div class="dot" data-step="4"><span class="n">4</span><span class="txt">閱讀簽署</span></div>
+  </nav>
+
+  <form id="form" novalidate>
+    <!-- 1. 基本資料 -->
+    <section class="card" data-sec="1">
+      <h2><span class="badge">1</span>基本資料</h2>
+      <p class="hint">請填寫與身分證件一致的真實資料，作為勞務報酬申報與匯款使用。</p>
+      <div class="grid">
+        <div class="field">
+          <label class="lab" for="name">真實姓名<span class="req">*</span></label>
+          <input id="name" name="name" type="text" autocomplete="name" placeholder="王小明" />
+          <div class="err-msg">請填寫姓名</div>
+        </div>
+        <div class="field">
+          <label class="lab" for="id_number">身分證字號<span class="req">*</span></label>
+          <input id="id_number" name="id_number" type="text" inputmode="verbatim" maxlength="10" placeholder="A123456789" style="text-transform:uppercase" />
+          <div class="err-msg">身分證字號格式不正確</div>
+        </div>
+        <div class="field">
+          <label class="lab" for="birthday">出生年月日<span class="opt">選填</span></label>
+          <input id="birthday" name="birthday" type="date" />
+        </div>
+        <div class="field">
+          <label class="lab" for="phone">聯絡手機<span class="req">*</span></label>
+          <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="0912345678" />
+          <div class="err-msg">請填寫聯絡電話</div>
+        </div>
+        <div class="field full">
+          <label class="lab" for="email">電子信箱<span class="opt">選填，用於寄送回執</span></label>
+          <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" />
+          <div class="err-msg">電子信箱格式不正確</div>
+        </div>
+        <div class="field full">
+          <label class="lab" for="address">戶籍／通訊地址<span class="opt">選填</span></label>
+          <input id="address" name="address" type="text" autocomplete="street-address" placeholder="台北市…" />
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. 匯款帳戶 -->
+    <section class="card" data-sec="2">
+      <h2><span class="badge">2</span>匯款帳戶</h2>
+      <p class="hint">報酬將匯入此帳戶，請與存摺封面一致；建議戶名與本人姓名相同。</p>
+      <div class="grid">
+        <div class="field">
+          <label class="lab" for="bank_name">銀行名稱<span class="req">*</span></label>
+          <input id="bank_name" name="bank_name" type="text" placeholder="國泰世華銀行" />
+          <div class="err-msg">請填寫銀行名稱</div>
+        </div>
+        <div class="field">
+          <label class="lab" for="bank_code">銀行代碼<span class="opt">3 碼，選填</span></label>
+          <input id="bank_code" name="bank_code" type="text" inputmode="numeric" maxlength="5" placeholder="013" />
+        </div>
+        <div class="field">
+          <label class="lab" for="bank_branch">分行<span class="opt">選填</span></label>
+          <input id="bank_branch" name="bank_branch" type="text" placeholder="信義分行" />
+        </div>
+        <div class="field">
+          <label class="lab" for="account_holder">戶名<span class="opt">選填</span></label>
+          <input id="account_holder" name="account_holder" type="text" placeholder="王小明" />
+        </div>
+        <div class="field full">
+          <label class="lab" for="bank_account">銀行帳號<span class="req">*</span></label>
+          <input id="bank_account" name="bank_account" type="text" inputmode="numeric" placeholder="000-00-000000-0" />
+          <div class="err-msg">請填寫銀行帳號</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. 證件上傳 -->
+    <section class="card" data-sec="3">
+      <h2><span class="badge">3</span>證件上傳</h2>
+      <p class="hint">請上傳清晰、四角完整的照片，系統會在你的裝置上自動壓縮後再上傳（不會先存到別處）。</p>
+      <div class="uploads">
+        <label class="drop" data-for="idf">
+          <input type="file" accept="image/*" capture="environment" data-field="idf" />
+          <div class="placeholder">
+            <div class="ico">🪪</div><div class="t">身分證 正面</div><div class="s">點擊拍照或選圖</div>
+          </div>
+          <div class="preview"><img alt="身分證正面預覽" /><div class="meta"></div></div>
+        </label>
+        <label class="drop" data-for="idb">
+          <input type="file" accept="image/*" capture="environment" data-field="idb" />
+          <div class="placeholder">
+            <div class="ico">🪪</div><div class="t">身分證 反面</div><div class="s">點擊拍照或選圖</div>
+          </div>
+          <div class="preview"><img alt="身分證反面預覽" /><div class="meta"></div></div>
+        </label>
+        <label class="drop" data-for="bank">
+          <input type="file" accept="image/*" capture="environment" data-field="bank" />
+          <div class="placeholder">
+            <div class="ico">📕</div><div class="t">存摺 封面</div><div class="s">含銀行 / 分行 / 帳號頁</div>
+          </div>
+          <div class="preview"><img alt="存摺封面預覽" /><div class="meta"></div></div>
+        </label>
+        <div class="drop" style="cursor:default;border-style:solid;background:#fff">
+          <div class="ico">🔒</div>
+          <div class="t" style="font-size:13px">你的證件僅供本次勞務報酬<br />申報與匯款核對</div>
+          <div class="s">傳輸全程加密 · 用畢即刪</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. 閱讀與簽署 -->
+    <section class="card" data-sec="4">
+      <h2><span class="badge">4</span>勞務單閱讀與電子簽署</h2>
+      <p class="hint">請完整閱讀以下勞務合作條款，並於下方手寫簽名。</p>
+
+      <div class="doc" id="doc">
+        <h3>隔壁老王｜KOL 合作勞務確認單</h3>
+        <p>立書人（以下稱「合作夥伴」）就與 <span class="sig-fill" id="docCompany">隔壁老王</span> 之
+          「<span class="sig-fill" id="docProject">合作案名</span>」合作案，同意下列條款：</p>
+        <ol>
+          <li>合作夥伴確認所提供之姓名、身分證字號、銀行帳戶等資料均屬本人真實資訊，如有不實願自負法律責任。</li>
+          <li>合作夥伴同意依雙方議定之內容提供勞務／創作服務，並就成果之合法性與原創性負責，不侵害第三人之智慧財產權。</li>
+          <li>報酬之給付方式、金額與時程依雙方另行議定者為準，並依中華民國稅法辦理扣繳與申報。</li>
+          <li>合作夥伴同意公司基於本次合作之需要，於合理範圍內使用其提供之素材；合作夥伴保有姓名表示權。</li>
+          <li>雙方對合作過程中知悉之他方營業秘密與個人資料負保密義務，非經同意不得洩漏。</li>
+          <li>本確認單以電子方式簽署，合作夥伴同意其手寫電子簽名與紙本親簽具同等效力。</li>
+        </ol>
+        <p>合作夥伴已詳閱並充分理解上述條款，於完成簽名後生效。</p>
+      </div>
+      <div class="read-flag" id="readFlag">▾ 請向下捲動閱讀完整條款</div>
+
+      <div class="grid" style="margin-top:18px">
+        <div class="field">
+          <label class="lab" for="project">合作案名<span class="opt">選填</span></label>
+          <input id="project" name="project" type="text" placeholder="2025 春季新品開箱" />
+        </div>
+        <div class="field">
+          <label class="lab" for="amount">約定報酬<span class="opt">選填</span></label>
+          <input id="amount" name="amount" type="text" placeholder="NT$ 00,000" />
+        </div>
+        <div class="field full">
+          <label class="lab" for="note">備註<span class="opt">選填</span></label>
+          <textarea id="note" name="note" placeholder="發票 / 扣繳 / 其他需告知財務的事項"></textarea>
+        </div>
+      </div>
+
+      <div class="sigpad-wrap">
+        <label class="lab">手寫簽名<span class="req">*</span></label>
+        <div class="sigpad" id="sigpad">
+          <canvas id="sigCanvas"></canvas>
+          <div class="ph">在框內以手指或滑鼠簽名</div>
+        </div>
+        <div class="sig-tools">
+          <span class="t">簽名即代表你同意上述勞務單條款</span>
+          <button type="button" class="btn-ghost" id="clearSig">清除重簽</button>
+        </div>
+      </div>
+
+      <div class="consent">
+        <input type="checkbox" id="agreed" name="agreed" value="1" />
+        <label for="agreed">我已閱讀並同意上述「KOL 合作勞務確認單」全部條款，且確認所填資料與上傳證件均真實無誤。</label>
+      </div>
+
+      <p class="privacy">
+        【個人資料告知聲明】本表單蒐集之姓名、身分證字號、聯絡方式、金融帳戶及證件影像，僅用於本次勞務合作之報酬給付、稅務申報與身分核對，
+        保存期間依稅法及相關法令辦理，期滿後刪除。你得依個資法行使查詢、更正、刪除等權利，聯絡信箱：
+        <a href="mailto:finance@example.com">finance@example.com</a>。
+      </p>
+    </section>
+
+    <div class="actions">
+      <!-- Turnstile：把 data-sitekey 換成你的 site key 後即生效；未設定時不影響送出 -->
+      <div class="cf-turnstile" data-sitekey="YOUR_TURNSTILE_SITE_KEY"></div>
+      <button type="submit" class="btn-submit" id="submitBtn">送出合作資料</button>
+      <p class="form-note">送出前請再次確認證件清晰、帳號正確。</p>
+    </div>
+  </form>
+</div>
+
+<footer>
+  <span class="sec">🔒 全站 HTTPS 加密傳輸 · 證件用畢即刪</span><br />
+  © <span id="yr"></span> 隔壁老王 NEAR OLDWANG DIGITAL · KOL OPEN
+</footer>
+
+<!-- Overlay -->
+<div class="overlay" id="overlay">
+  <div class="modal" id="modal"></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  document.getElementById("yr").textContent = new Date().getFullYear();
+
+  // ── 可自訂預設 ──
+  const DEFAULT_COMPANY = "隔壁老王";
+
+  // ── 圖檔壓縮（在使用者裝置上完成）──
+  const MAX_EDGE = 1600;        // 最長邊
+  const JPEG_QUALITY = 0.82;
+  const files = { idf:null, idb:null, bank:null, sig:null };
+
+  function readImage(file){
+    return new Promise((res,rej)=>{
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = ()=>{ URL.revokeObjectURL(url); res(img); };
+      img.onerror = ()=>{ URL.revokeObjectURL(url); rej(new Error("讀取失敗")); };
+      img.src = url;
+    });
+  }
+  async function compress(file){
+    const img = await readImage(file);
+    let {width:w,height:h} = img;
+    if (Math.max(w,h) > MAX_EDGE){
+      const s = MAX_EDGE/Math.max(w,h); w = Math.round(w*s); h = Math.round(h*s);
+    }
+    const c = document.createElement("canvas"); c.width=w; c.height=h;
+    const ctx = c.getContext("2d");
+    ctx.fillStyle="#fff"; ctx.fillRect(0,0,w,h);
+    ctx.drawImage(img,0,0,w,h);
+    return await new Promise(r=>c.toBlob(r,"image/jpeg",JPEG_QUALITY));
+  }
+  const fmtKB = b => b<1024*1024 ? (b/1024).toFixed(0)+" KB" : (b/1024/1024).toFixed(1)+" MB";
+
+  document.querySelectorAll('input[type=file][data-field]').forEach(inp=>{
+    inp.addEventListener("change", async ()=>{
+      const field = inp.dataset.field;
+      const file = inp.files && inp.files[0];
+      const drop = inp.closest(".drop");
+      const prevImg = drop.querySelector(".preview img");
+      const meta = drop.querySelector(".preview .meta");
+      if(!file) return;
+      meta.textContent = "壓縮中…"; drop.classList.add("filled");
+      try{
+        const blob = await compress(file);
+        files[field] = blob;
+        prevImg.src = URL.createObjectURL(blob);
+        meta.innerHTML = '✓ 已就緒 · '+fmtKB(blob.size)+'<a data-clear="'+field+'">重新選擇</a>';
+      }catch(e){
+        drop.classList.remove("filled"); files[field]=null;
+        alert("這張圖片無法處理，請換一張試試。");
+      }
+    });
+  });
+  // 重新選擇
+  document.addEventListener("click",e=>{
+    const t=e.target.closest("[data-clear]");
+    if(!t) return;
+    e.preventDefault();
+    const field=t.dataset.clear, drop=document.querySelector('.drop[data-for="'+field+'"]');
+    files[field]=null; drop.classList.remove("filled");
+    drop.querySelector('input[type=file]').value="";
+  });
+
+  // ── 勞務單：閱讀偵測 + 公司/案名同步 ──
+  const doc = document.getElementById("doc");
+  const readFlag = document.getElementById("readFlag");
+  doc.addEventListener("scroll",()=>{
+    if(doc.scrollTop + doc.clientHeight >= doc.scrollHeight - 8){
+      readFlag.textContent="✓ 你已閱讀完整條款"; readFlag.classList.add("done");
+    }
+  });
+  const projectInp=document.getElementById("project");
+  projectInp.addEventListener("input",()=>{
+    document.getElementById("docProject").textContent = projectInp.value.trim() || "合作案名";
+  });
+  document.getElementById("docCompany").textContent = DEFAULT_COMPANY;
+
+  // ── 手寫簽名 ──
+  const pad=document.getElementById("sigpad");
+  const canvas=document.getElementById("sigCanvas");
+  const ctx=canvas.getContext("2d");
+  let drawing=false, hasInk=false, last=null;
+  function fitCanvas(){
+    const r=canvas.getBoundingClientRect();
+    const dpr=window.devicePixelRatio||1;
+    const data = hasInk ? ctx.getImageData(0,0,canvas.width,canvas.height) : null;
+    canvas.width=r.width*dpr; canvas.height=r.height*dpr;
+    ctx.scale(dpr,dpr);
+    ctx.lineWidth=2.6; ctx.lineCap="round"; ctx.lineJoin="round"; ctx.strokeStyle="#15130e";
+    if(data) ctx.putImageData(data,0,0);
+  }
+  window.addEventListener("resize",fitCanvas);
+  setTimeout(fitCanvas,0);
+  function pos(e){
+    const r=canvas.getBoundingClientRect();
+    const p=e.touches?e.touches[0]:e;
+    return {x:p.clientX-r.left,y:p.clientY-r.top};
+  }
+  function start(e){e.preventDefault();drawing=true;last=pos(e);}
+  function move(e){
+    if(!drawing)return; e.preventDefault();
+    const p=pos(e);
+    ctx.beginPath();ctx.moveTo(last.x,last.y);ctx.lineTo(p.x,p.y);ctx.stroke();
+    last=p;
+    if(!hasInk){hasInk=true;pad.classList.add("has-ink");}
+  }
+  function end(){drawing=false;}
+  canvas.addEventListener("mousedown",start); canvas.addEventListener("mousemove",move);
+  window.addEventListener("mouseup",end);
+  canvas.addEventListener("touchstart",start,{passive:false});
+  canvas.addEventListener("touchmove",move,{passive:false});
+  canvas.addEventListener("touchend",end);
+  document.getElementById("clearSig").addEventListener("click",()=>{
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    hasInk=false; pad.classList.remove("has-ink"); files.sig=null;
+  });
+  function sigBlob(){
+    return new Promise(res=>{ canvas.toBlob(res,"image/png"); });
+  }
+
+  // ── 即時 stepper 高亮 ──
+  const secs=[...document.querySelectorAll("section.card[data-sec]")];
+  const dots=[...document.querySelectorAll(".steps .dot")];
+  const io=new IntersectionObserver(es=>{
+    es.forEach(en=>{
+      if(en.isIntersecting){
+        const i=en.target.dataset.sec;
+        dots.forEach(d=>d.classList.toggle("active",d.dataset.step===i));
+      }
+    });
+  },{rootMargin:"-45% 0px -45% 0px"});
+  secs.forEach(s=>io.observe(s));
+
+  // ── 驗證 ──
+  const form=document.getElementById("form");
+  function setErr(id,show,msg){
+    const el=document.getElementById(id);
+    const box=el.parentElement.querySelector(".err-msg");
+    el.classList.toggle("invalid",show);
+    if(box){ box.classList.toggle("show",show); if(msg) box.textContent=msg; }
+  }
+  const idRe=/^[A-Z][12]\d{8}$/;
+  const emailRe=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  function validate(){
+    let ok=true, firstBad=null;
+    const need=[["name","請填寫姓名"],["phone","請填寫聯絡電話"],["bank_name","請填寫銀行名稱"],["bank_account","請填寫銀行帳號"]];
+    need.forEach(([id,msg])=>{
+      const bad=!document.getElementById(id).value.trim();
+      setErr(id,bad,msg); if(bad){ok=false;firstBad=firstBad||id;}
+    });
+    const idv=document.getElementById("id_number").value.trim().toUpperCase();
+    const idBad=!idRe.test(idv);
+    setErr("id_number",idBad,"身分證字號格式不正確（如 A123456789）"); if(idBad){ok=false;firstBad=firstBad||"id_number";}
+    const em=document.getElementById("email").value.trim();
+    if(em){ const eb=!emailRe.test(em); setErr("email",eb); if(eb){ok=false;firstBad=firstBad||"email";} }
+
+    const missing=[];
+    if(!files.idf) missing.push("身分證正面");
+    if(!files.idb) missing.push("身分證反面");
+    if(!files.bank) missing.push("存摺封面");
+    return {ok,firstBad,missing};
+  }
+
+  // ── Overlay helpers ──
+  const overlay=document.getElementById("overlay"), modal=document.getElementById("modal");
+  function showLoading(){
+    modal.innerHTML='<div class="spinner"></div><p style="margin-top:18px">資料上傳中，請勿關閉視窗…</p>';
+    overlay.classList.add("show");
+  }
+  function showSuccess(ref){
+    modal.innerHTML='<div class="big">✅</div><h3>送出成功！</h3>'+
+      '<p>感謝你完成合作資料填寫，財務同仁將於收到後進行核對。</p>'+
+      '<div class="ref">受理編號：'+ref+'</div><br>'+
+      '<button class="btn-submit" onclick="location.reload()">完成</button>';
+  }
+  function showError(msg){
+    modal.innerHTML='<div class="big">⚠️</div><h3>送出失敗</h3><p>'+msg+'</p>'+
+      '<button class="btn-ghost" style="margin-top:20px" onclick="document.getElementById(\'overlay\').classList.remove(\'show\')">關閉重試</button>';
+    overlay.classList.add("show");
+  }
+
+  // ── 送出 ──
+  const submitBtn=document.getElementById("submitBtn");
+  form.addEventListener("submit",async e=>{
+    e.preventDefault();
+    const v=validate();
+    if(!document.getElementById("agreed").checked){
+      alert("請先勾選同意勞務單條款。"); return;
+    }
+    if(!hasInk){ alert("請於簽名框內完成手寫簽名。"); return; }
+    if(!v.ok){
+      const el=document.getElementById(v.firstBad);
+      el && el.scrollIntoView({behavior:"smooth",block:"center"});
+      return;
+    }
+    if(v.missing.length){
+      alert("請上傳：" + v.missing.join("、"));
+      document.querySelector('[data-sec="3"]').scrollIntoView({behavior:"smooth",block:"center"});
+      return;
+    }
+
+    // 取簽名 blob
+    files.sig = await sigBlob();
+
+    submitBtn.disabled=true; showLoading();
+    const fd=new FormData(form);   // 帶入所有文字欄位 + agreed + turnstile token
+    fd.set("agreed", document.getElementById("agreed").checked ? "1":"0");
+    fd.append("idf", files.idf, "idf.jpg");
+    fd.append("idb", files.idb, "idb.jpg");
+    fd.append("bank", files.bank, "bank.jpg");
+    fd.append("sig", files.sig, "sig.png");
+
+    try{
+      const r=await fetch("/api/submit",{method:"POST",body:fd});
+      const data=await r.json().catch(()=>({ok:false,error:"伺服器回應異常"}));
+      if(r.ok && data.ok){ showSuccess(data.ref || "—"); }
+      else{ submitBtn.disabled=false; showError(data.error || "請稍後再試。"); resetTurnstile(); }
+    }catch(err){
+      submitBtn.disabled=false; showError("網路連線異常，請檢查網路後再試。"); resetTurnstile();
+    }
+  });
+
+  function resetTurnstile(){ try{ window.turnstile && window.turnstile.reset(); }catch(_){} }
+})();
+</script>
+</body>
+</html>

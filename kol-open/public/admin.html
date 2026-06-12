@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<meta name="referrer" content="no-referrer" />
+<title>KOL OPEN｜財務後台</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --yellow:#ffd400; --yellow-soft:#fff7d1; --ink:#1d1b16; --ink-soft:#5c574c; --muted:#8a8377;
+    --paper:#fff; --bg:#f6f4ec; --line:#e6e0d0; --ok:#1f9d57; --shadow:0 1px 2px rgba(0,0,0,.05),0 10px 30px -14px rgba(0,0,0,.2);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Noto Sans TC',system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;-webkit-font-smoothing:antialiased}
+  header{background:var(--ink);color:#fff;padding:16px 26px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:20}
+  header .mark{width:36px;height:36px;border-radius:9px;background:var(--yellow);display:grid;place-items:center;font-weight:900;color:var(--ink);transform:rotate(-4deg)}
+  header h1{font-size:17px;font-weight:900;letter-spacing:.5px}
+  header .tag{font-size:11px;background:#3a362d;padding:3px 9px;border-radius:20px;color:#cfc8b6}
+  header .right{margin-left:auto;display:flex;gap:10px;align-items:center}
+  header .stat{font-size:13px;color:#cfc8b6}
+  header button{background:#2c2920;color:#fff;border:1px solid #3a362d;border-radius:8px;padding:7px 13px;font:inherit;font-size:13px;cursor:pointer}
+  header button:hover{background:#3a362d}
+
+  .toolbar{padding:18px 26px;display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+  .toolbar input{flex:1;min-width:220px;font:inherit;padding:11px 14px;border:1.5px solid var(--line);border-radius:10px;background:#fff}
+  .toolbar input:focus{outline:none;border-color:var(--yellow);box-shadow:0 0 0 4px var(--yellow-soft)}
+  .toolbar .count{font-size:13px;color:var(--muted)}
+
+  .wrap{padding:0 26px 60px}
+  .grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(330px,1fr))}
+
+  .rec{background:var(--paper);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column}
+  .rec .head{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-start;gap:10px;background:linear-gradient(var(--yellow-soft),#fff)}
+  .rec .head .name{font-weight:900;font-size:17px}
+  .rec .head .sub{font-size:12px;color:var(--muted);margin-top:2px}
+  .rec .head .id{font-size:11px;font-family:ui-monospace,monospace;color:var(--ink-soft);background:#fff;border:1px solid var(--line);padding:3px 7px;border-radius:6px;white-space:nowrap}
+
+  .rec .body{padding:14px 16px;display:grid;gap:8px}
+  .row{display:grid;grid-template-columns:84px 1fr;gap:8px;font-size:13.5px}
+  .row .k{color:var(--muted);font-weight:500}
+  .row .v{color:var(--ink);word-break:break-all}
+  .row .v.mono{font-family:ui-monospace,monospace}
+
+  .thumbs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:0 16px 14px}
+  .thumbs a{display:block;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--bg);aspect-ratio:1;position:relative}
+  .thumbs a img{width:100%;height:100%;object-fit:cover;display:block}
+  .thumbs a .lbl{position:absolute;left:0;right:0;bottom:0;background:rgba(29,27,22,.7);color:#fff;font-size:10px;text-align:center;padding:2px}
+  .thumbs a.sig img{object-fit:contain;background:#fff}
+  .thumbs a.empty{display:grid;place-items:center;color:var(--muted);font-size:11px}
+
+  .rec .foot{margin-top:auto;padding:10px 16px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:var(--muted)}
+  .badge-ok{color:var(--ok);font-weight:700}
+  .badge-no{color:#d7263d;font-weight:700}
+
+  .empty-state,.loading{text-align:center;padding:80px 20px;color:var(--muted)}
+  .spinner{width:36px;height:36px;border:4px solid var(--yellow-soft);border-top-color:var(--yellow);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 14px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .note{margin:0 26px 16px;padding:11px 14px;background:#fff7d1;border:1px solid #f0e2a0;border-radius:10px;font-size:12.5px;color:#7a6a1a}
+
+  /* Lightbox */
+  .lb{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;place-items:center;z-index:50;padding:24px}
+  .lb.show{display:grid}
+  .lb img{max-width:96vw;max-height:90vh;border-radius:8px;background:#fff}
+  .lb .close{position:absolute;top:18px;right:24px;color:#fff;font-size:30px;cursor:pointer;background:none;border:none}
+  @media print{header,.toolbar,.note,.lb{display:none}.grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<header>
+  <span class="mark">王</span>
+  <div>
+    <h1>KOL OPEN · 財務後台</h1>
+  </div>
+  <span class="tag">Access 保護中</span>
+  <div class="right">
+    <span class="stat" id="stat">載入中…</span>
+    <button id="refresh">重新整理</button>
+    <button onclick="window.print()">列印</button>
+  </div>
+</header>
+
+<div class="note">
+  ⚠️ 本頁含身分證件等高敏感個資，請確認已於 Cloudflare Zero Trust → Access 鎖定
+  <code>/admin.html</code>、<code>/api/records</code>、<code>/api/image/*</code>，僅限財務同仁登入。
+</div>
+
+<div class="toolbar">
+  <input id="search" type="search" placeholder="🔎 搜尋姓名 / 電話 / 案名 / 公司…" />
+  <span class="count" id="count"></span>
+</div>
+
+<div class="wrap">
+  <div class="grid" id="grid"></div>
+  <div class="loading" id="loading"><div class="spinner"></div>讀取紀錄中…</div>
+  <div class="empty-state" id="empty" style="display:none">目前沒有符合的紀錄。</div>
+</div>
+
+<div class="lb" id="lb"><button class="close">×</button><img id="lbImg" alt="" /></div>
+
+<script>
+(function(){
+  "use strict";
+  const grid=document.getElementById("grid");
+  const loading=document.getElementById("loading");
+  const empty=document.getElementById("empty");
+  const stat=document.getElementById("stat");
+  const countEl=document.getElementById("count");
+  const search=document.getElementById("search");
+
+  const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  const img=key=>"/api/image/"+key.split("/").map(encodeURIComponent).join("/");
+  function fmtDate(iso){
+    try{const d=new Date(iso);return d.toLocaleString("zh-TW",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});}
+    catch(_){return iso;}
+  }
+
+  function thumb(key,label,cls){
+    if(!key) return '<div class="thumbs-a"></div>';
+    return '<a class="'+(cls||"")+'" href="'+img(key)+'" data-full="'+img(key)+'">'+
+           '<img loading="lazy" src="'+img(key)+'" alt="'+label+'" /><span class="lbl">'+label+'</span></a>';
+  }
+  function rowIf(k,v,mono){
+    if(!v) return "";
+    return '<div class="row"><span class="k">'+k+'</span><span class="v'+(mono?" mono":"")+'">'+esc(v)+'</span></div>';
+  }
+
+  function render(records){
+    grid.innerHTML="";
+    if(!records.length){empty.style.display="block";return;}
+    empty.style.display="none";
+    records.forEach(r=>{
+      const bank=[r.bank_name,r.bank_branch].filter(Boolean).join(" ")+
+                 (r.bank_code?(" ("+r.bank_code+")"):"");
+      const el=document.createElement("div");
+      el.className="rec";
+      el.innerHTML=
+        '<div class="head">'+
+          '<div><div class="name">'+esc(r.name)+'</div>'+
+          '<div class="sub">'+esc(r.phone||"")+(r.email?(" · "+esc(r.email)):"")+'</div></div>'+
+          '<div class="id">#'+r.id+'</div>'+
+        '</div>'+
+        '<div class="body">'+
+          rowIf("身分證",r.id_number,true)+
+          rowIf("生日",r.birthday)+
+          rowIf("地址",r.address)+
+          rowIf("銀行",bank)+
+          rowIf("帳號",r.bank_account,true)+
+          rowIf("戶名",r.account_holder)+
+          rowIf("案名",r.project)+
+          rowIf("公司",r.company)+
+          rowIf("報酬",r.amount)+
+          rowIf("備註",r.note)+
+        '</div>'+
+        '<div class="thumbs">'+
+          thumb(r.idf_key,"證正")+thumb(r.idb_key,"證反")+
+          thumb(r.bank_key,"存摺")+thumb(r.sig_key,"簽名","sig")+
+        '</div>'+
+        '<div class="foot">'+
+          '<span>'+fmtDate(r.created_at)+'</span>'+
+          '<span>'+(r.agreed?'<span class="badge-ok">✓ 已簽署同意</span>':'<span class="badge-no">未同意</span>')+'</span>'+
+        '</div>';
+      grid.appendChild(el);
+    });
+  }
+
+  async function load(q){
+    loading.style.display="block"; empty.style.display="none";
+    try{
+      const url="/api/records"+(q?("?q="+encodeURIComponent(q)):"");
+      const r=await fetch(url,{headers:{"accept":"application/json"}});
+      if(r.status===401||r.status===403){
+        loading.innerHTML="此頁受 Cloudflare Access 保護，請以授權帳號登入。"; return;
+      }
+      const data=await r.json();
+      loading.style.display="none";
+      if(!data.ok){ grid.innerHTML=""; empty.style.display="block"; empty.textContent="讀取失敗："+(data.error||""); return; }
+      stat.textContent="共 "+data.total+" 筆";
+      countEl.textContent=(q?("符合 "+data.count+" 筆"):"顯示最新 "+data.count+" 筆");
+      render(data.records);
+    }catch(e){
+      loading.innerHTML="連線失敗，請確認已登入並重試。";
+    }
+  }
+
+  // 搜尋（debounce）
+  let t;
+  search.addEventListener("input",()=>{clearTimeout(t);t=setTimeout(()=>load(search.value.trim()),300);});
+  document.getElementById("refresh").addEventListener("click",()=>load(search.value.trim()));
+
+  // Lightbox
+  const lb=document.getElementById("lb"),lbImg=document.getElementById("lbImg");
+  document.addEventListener("click",e=>{
+    const a=e.target.closest("a[data-full]");
+    if(a){e.preventDefault();lbImg.src=a.dataset.full;lb.classList.add("show");}
+  });
+  lb.addEventListener("click",()=>{lb.classList.remove("show");lbImg.src="";});
+
+  load("");
+})();
+</script>
+</body>
+</html>
